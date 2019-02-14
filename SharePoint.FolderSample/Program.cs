@@ -21,7 +21,7 @@ namespace SharePoint.FolderSample
         {
             if (!IsConfigAndArgumentsValid(args))
             {
-                Console.WriteLine("Missing argument with folder URL of configuration values in app settings.");
+                Console.WriteLine("Missing argument with folder URL or configuration values in app settings.");
                 Console.WriteLine("Press any key to continue...");
                 Console.ReadKey();
                 return;
