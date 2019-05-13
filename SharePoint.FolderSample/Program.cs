@@ -1,4 +1,5 @@
 ﻿using Microsoft.SharePoint.Client;
+using Microsoft.SharePoint.Client.Search.Query;
 using SharePoint.FolderSample.Code;
 using SharePoint.FolderSample.Models;
 using System;
@@ -38,7 +39,7 @@ namespace SharePoint.FolderSample
                 await client.ExecuteQueryAsync();
 
                 Console.WriteLine("Loading files list...");
-                var files = await GetFilesFromFolderAsync(client, Config.WebRelativeListUrl, folder);
+                var files = await GetFilesFromFolderAsync(client, folder);
                 Console.WriteLine($"Loaded {files.Count()} files");
                 IO.Directory.CreateDirectory("Files");
 
@@ -59,34 +60,36 @@ namespace SharePoint.FolderSample
         }
 
         /// <summary>
-        /// Query SharePoint list (library) and fetch information about each file (URL and name).
+        /// Query SharePoint Search and fetch information about each file (URL and name).
         /// </summary>
         /// <param name="client">Existing SharePoint ClientContext</param>
-        /// <param name="webRelativeListUrl">Web relative list URL. Example: 'Shared Documents'</param>
-        /// <param name="listRelativeFolderUrl">List relative folder URL. Example: 'folder/subfolder'</param>
+        /// <param name="folderUrl">Full server folder URL</param>
         /// <returns>List of files information</returns>
-        static async Task<IEnumerable<SPFileInfo>> GetFilesFromFolderAsync(
-            ClientContext client, string webRelativeListUrl, string listRelativeFolderUrl)
+        static async Task<IEnumerable<SPFileInfo>> GetFilesFromFolderAsync(ClientContext client, string folderUrl)
         {
-            List list = client.Web.GetList(CombineUrls(client.Web.ServerRelativeUrl, webRelativeListUrl));
-
-            var query = new CamlQuery
+            KeywordQuery query = new KeywordQuery(client)
             {
-                FolderServerRelativeUrl = CombineUrls(client.Web.ServerRelativeUrl, webRelativeListUrl, listRelativeFolderUrl),
-                ViewXml = "<View Scope='Recursive' />"
+                QueryText = $"IsContainer=false Path:\"{folderUrl}\"",
+                RowLimit = 500
             };
-
-            ListItemCollection items = list.GetItems(query);
-            client.Load(items, i => i.Include(x => x.File.ServerRelativeUrl, x => x.File.Name));
+            SearchExecutor searchExecutor = new SearchExecutor(client);
+            ClientResult<ResultTableCollection> results = searchExecutor.ExecuteQuery(query);
             await client.ExecuteQueryAsync();
 
+            var relevantResults = results.Value.Where(x => x.TableType == "RelevantResults").FirstOrDefault();
+            if (relevantResults == null)
+                return Array.Empty<SPFileInfo>();
+
             var files = new List<SPFileInfo>();
-            foreach (ListItem item in items)
+            foreach (IDictionary<string, object> item in relevantResults.ResultRows)
             {
+                var fileKey = item.Where(x => x.Key == "Path").FirstOrDefault();
+                Uri filePath = new Uri(fileKey.Value.ToString());
+
                 files.Add(new SPFileInfo()
                 {
-                    ServerRelativeUrl = item.File.ServerRelativeUrl,
-                    FileName = item.File.Name
+                    ServerRelativeUrl = filePath.PathAndQuery,
+                    FileName = filePath.PathAndQuery.Substring(filePath.PathAndQuery.LastIndexOf("/") + 1)
                 });
             }
 
@@ -116,7 +119,7 @@ namespace SharePoint.FolderSample
         static string CombineUrls(string baseUrl, params string[] otherParts)
         {
             string[] cleaned = otherParts.ToList().Select(u => u.Trim('/')).ToArray();
-            return $"/{baseUrl.Trim('/')}/{string.Join("/", cleaned)}";
+            return $"{baseUrl.Trim('/')}/{string.Join("/", cleaned)}";
         }
 
         static bool IsConfigAndArgumentsValid(string[] args)

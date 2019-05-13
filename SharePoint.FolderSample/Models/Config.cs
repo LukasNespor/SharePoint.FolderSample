@@ -5,7 +5,6 @@ namespace SharePoint.FolderSample.Models
     internal static class Config
     {
         public static string SiteUrl { get { return ConfigurationManager.AppSettings.Get(nameof(SiteUrl)); } }
-        public static string WebRelativeListUrl { get { return ConfigurationManager.AppSettings.Get(nameof(WebRelativeListUrl)); } }
         public static string ClientId { get { return ConfigurationManager.AppSettings.Get(nameof(ClientId)); } }
         public static string ClientSecret { get { return ConfigurationManager.AppSettings.Get(nameof(ClientSecret)); } }
         public static string KeyVaultUrl { get { return ConfigurationManager.AppSettings.Get(nameof(KeyVaultUrl)); } }
@@ -16,7 +15,6 @@ namespace SharePoint.FolderSample.Models
             {
                 return !(
                     string.IsNullOrWhiteSpace(SiteUrl) ||
-                    string.IsNullOrWhiteSpace(WebRelativeListUrl) ||
                     string.IsNullOrWhiteSpace(ClientId) ||
                     string.IsNullOrWhiteSpace(ClientSecret) ||
                     string.IsNullOrWhiteSpace(KeyVaultUrl)
