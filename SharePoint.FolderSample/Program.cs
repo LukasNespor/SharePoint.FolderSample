@@ -1,4 +1,5 @@
 ﻿using Microsoft.SharePoint.Client;
+using SharePoint.FolderSample.Code;
 using SharePoint.FolderSample.Models;
 using System;
 using System.Collections.Generic;
@@ -29,12 +30,10 @@ namespace SharePoint.FolderSample
 
             string folder = args[0];
 
-            using (ClientContext client = new ClientContext(Config.SiteUrl))
+            using (ClientContext client = await AuthenticationUtilities.GetClientContextAsync(Config.SiteUrl))
             using (SecureString password = new SecureString())
             {
                 Console.WriteLine("Connecting to SharePoint site...");
-                Config.Password.ToList().ForEach(c => password.AppendChar(c));
-                client.Credentials = new SharePointOnlineCredentials(Config.Username, password);
                 client.Load(client.Web, w => w.ServerRelativeUrl);
                 await client.ExecuteQueryAsync();
 

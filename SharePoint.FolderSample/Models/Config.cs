@@ -6,8 +6,10 @@ namespace SharePoint.FolderSample.Models
     {
         public static string SiteUrl { get { return ConfigurationManager.AppSettings.Get(nameof(SiteUrl)); } }
         public static string WebRelativeListUrl { get { return ConfigurationManager.AppSettings.Get(nameof(WebRelativeListUrl)); } }
-        public static string Username { get { return ConfigurationManager.AppSettings.Get(nameof(Username)); } }
-        public static string Password { get { return ConfigurationManager.AppSettings.Get(nameof(Password)); } }
+        public static string ClientId { get { return ConfigurationManager.AppSettings.Get(nameof(ClientId)); } }
+        public static string ClientSecret { get { return ConfigurationManager.AppSettings.Get(nameof(ClientSecret)); } }
+        public static string KeyVaultUrl { get { return ConfigurationManager.AppSettings.Get(nameof(KeyVaultUrl)); } }
+
         public static bool IsValid
         {
             get
@@ -15,8 +17,9 @@ namespace SharePoint.FolderSample.Models
                 return !(
                     string.IsNullOrWhiteSpace(SiteUrl) ||
                     string.IsNullOrWhiteSpace(WebRelativeListUrl) ||
-                    string.IsNullOrWhiteSpace(Username) ||
-                    string.IsNullOrWhiteSpace(Password)
+                    string.IsNullOrWhiteSpace(ClientId) ||
+                    string.IsNullOrWhiteSpace(ClientSecret) ||
+                    string.IsNullOrWhiteSpace(KeyVaultUrl)
                 );
             }
         }
